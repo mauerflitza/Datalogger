@@ -44,6 +44,7 @@
 			  <input type="text" name="SampleRates" id="SampleRates" style="visibility:hidden;"/>
 			  <input type="text" name="StartVal" id="StartVal" style="visibility:hidden;"/>
 			  <input type="text" name="webpage" id="webpage" style="visibility:hidden;"/>
+			  <input type="text" name="selected" id="selected" style="visibility:hidden;"/>
 			  <input name="submit_bttn" type="submit" value="Submit">
 			</form>
 		</div>

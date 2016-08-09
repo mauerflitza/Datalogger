@@ -10,7 +10,7 @@ $data		= array();	//array to pass data back
 	// DO ALL YOUR FORM PROCESSING HERE
 	$savings = fopen('/home/pi/datalogger/loggerconfigs/savings.txt','w');
 	fwrite($savings,"StartValues:");
-	fwrite($savings,$_POST['StartVal'] . "\n");
+	fwrite($savings,$_POST['StartVal'] . "/" . $_POST['selected'] . "/" . "\n");
 	fwrite($savings,"SampleRates:");
 	fwrite($savings,$_POST['SampleRates'] . "\n");
 	fwrite($savings,"html:");

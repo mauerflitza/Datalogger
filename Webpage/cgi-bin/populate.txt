@@ -8,6 +8,7 @@ $(document).ready(function() {
         })
             // using the done promise callback
             .done(function(data) {
+		console.log(data);
 		var Rates = JSON.parse(data).data['Rates'];
 		Rates = Rates.substr(Rates.indexOf("SampleRates:")+1);
 		$(".sampleselection").each(function() {
@@ -16,6 +17,16 @@ $(document).ready(function() {
 		$(this).val(Rates.substr(0,ende));
 		Rates = Rates.substr(ende+1);
 		});
+		var conditions = JSON.parse(data).data['Start'];
+		var value = conditions.substr(0, conditions.indexOf("/"));
+
+		conditions=conditions.substr(conditions.indexOf("/")+1);
+		var selected = conditions.substr(0, conditions.indexOf("/"));
+
+		var con_row = $("input[name=condition][value="+selected+"]");
+		con_row.prop('checked', true);
+		con_row.closest("td").next().find("input").val(value);
+
                 // log data to the console so we can see
                 console.log(data);
             });

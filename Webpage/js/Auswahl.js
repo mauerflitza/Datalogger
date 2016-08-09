@@ -67,13 +67,6 @@ var html_site = ($( 'body' ).html().toString());
 //<head muss manuell hinzugefügt werden>
 $("#webpage").val(html_site);
 $("#SampleRates").val(Samplerates);
+$("#selected").val($("input[type='radio'][name='condition']:checked").val());
 $("#StartVal").val(StartVal);
 }
-
-
-
-	
-
-		
-		
-

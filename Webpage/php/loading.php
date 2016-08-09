@@ -12,11 +12,10 @@ $values		= array();
 	$savings = fopen('/home/pi/datalogger/loggerconfigs/savings.txt','r');
 	if($savings) {
 	while (($line = fgets($savings)) !== false) {
-		if($pos = strpos($line,"StartValue:") !== false) {
-		$values['Start'] = substr($line,$pos+1);}
+		if($pos = strpos($line,"StartValues:") !== false) {
+		$values['Start'] = substr($line,strlen("StartValues:"));}
 		elseif($pos = strpos($line,"SampleRates:") !== false) {
 		$values['Rates'] = substr($line,strlen("SampleRates:"));}
-
 	}
 
 
