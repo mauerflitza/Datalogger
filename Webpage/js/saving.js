@@ -19,6 +19,7 @@ $(document).ready(function() {
             .done(function(data) {
 
                 // log data to the console so we can see
+		alert("Setup saved");
                 console.log(data); 
 
                 // here we will handle errors and validation messages
