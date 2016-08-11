@@ -1,0 +1,14 @@
+];
+
+var signalList = new List('signals', options, values);
+
+
+//EXTREM WICHTIGE FUNKTION FUER MEIN CGI
+signalList.add({
+  sig_sel: "temp",
+});
+
+</script>
+
+</body>
+</html>

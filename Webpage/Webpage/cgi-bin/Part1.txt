@@ -12,8 +12,6 @@
 		<script src="../js/jQuery.js"></script>
 		<script src="../js/searchlist.js"></script>
 		<script src="../js/Auswahl.js"></script>
-		<script src="../js/saving.js"></script>
-		<script src="../js/sig_selected.js"></script>
 	</head>
 <body>
 	<ul class="menu">
@@ -33,7 +31,7 @@
 			<ul class="list"></ul>
 		</div>
 		<div class="content-block">
-			<form id="Auflistung" text-align:"center;"> 
+			<form id="Auflistung" text-align:"center;"  > 
 			  <table id="Sign_table" style="visibility:hidden;">
 				  <th>Name</th>
 				  <th>Sample Rate</th>
@@ -41,11 +39,10 @@
 			  </table>
 			  <input id="submit_btn" class="Upload" style="margin-top:15px; visibility:hidden;" value="submit" type="Submit">
 			</form>
-			<form id="Save" onsubmit="saver() "method="post" action="../php/saving.php" style="text-align:center;"  > 
+			<form id="Save" onsubmit="saver() "method="post" action="saving.py" text-align:"center;"  > 
 			  <input type="text" name="SampleRates" id="SampleRates" style="visibility:hidden;"/>
 			  <input type="text" name="StartVal" id="StartVal" style="visibility:hidden;"/>
 			  <input type="text" name="webpage" id="webpage" style="visibility:hidden;"/>
-			  <input type="text" name="selected" id="selected" style="visibility:hidden;"/>
 			  <input name="submit_bttn" type="submit" value="Submit">
 			</form>
 		</div>
