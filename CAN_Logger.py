@@ -29,7 +29,8 @@ class shutdown(threading.Thread):
 
 
 
-
+# SOURCE: https://www.kernel.org/pub/linux/kernel/people/rml/inotify/headers/inotify.h
+# SOURCE: https://github.com/seb-m/pyinotify
 class FileEventHandler(pyinotify.ProcessEvent):
 	def my_init(self, changeFlag):
 		self.changeFlag=changeFlag
