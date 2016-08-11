@@ -3,6 +3,7 @@ import queue
 import can 
 import time
 import subprocess
+import signal
 import pyinotify
 
 q_logs = queue.Queue()
@@ -30,8 +31,11 @@ class shutdown(threading.Thread):
 
 
 class FileEventHandler(pyinotify.ProcessEvent):
-     def process_IN_CLOSE_WRITE(self, event,changeFlag):
-        print("Changed" + event.pathname)
+	def my_init(self, changeFlag):
+		self.changeFlag=changeFlag
+	def process_IN_MODIFY(self, event):
+		print("Changed" + event.pathname)
+		self.changeFlag.set()
             			
 
 #******************************************************
@@ -98,7 +102,7 @@ def ctrl_c_handler(signal, frame):
 	global run
 	#LRM30_request(vcPort,'measure','Idle')
 	time.sleep(1)
-	print 'Goodbye, cruel world!!!'
+	print('Goodbye, cruel world!!!')
 	run=False	
 			
 #******************************************************
@@ -106,13 +110,14 @@ def ctrl_c_handler(signal, frame):
 #******************************************************
 if __name__ == '__main__':
 	end_Flag = threading.Event()
+	change_Flag = threading.Event()
 	logs = open('test.csv', 'w')
 	names = ["acc", "temp", "gyro"]
 	signal.signal(signal.SIGINT, ctrl_c_handler)
 	
 	wm = pyinotify.WatchManager()  # Watch Manager
-	mask = pyinotify.IN_CLOSE_WRITE  # watched events
-	notifier = pyinotify.ThreadedNotifier(wm, FileEventHandler(changeFlag=changeEvent))
+	mask = pyinotify.IN_MODIFY  # watched events
+	notifier = pyinotify.ThreadedNotifier(wm, FileEventHandler(changeFlag=change_Flag))
 	notifier.start()
 	wdd = wm.add_watch('/home/pi/datalogger/loggerconfigs/', mask, rec=False)
 	
@@ -122,8 +127,7 @@ if __name__ == '__main__':
 	Listen_Thread.start()
 	Print_Thread.start()
 	
-	while run:
-		pass
+	time.sleep(15)
 	end_Flag.set()	
 	notifier.stop()
 	Print_Thread.join()
