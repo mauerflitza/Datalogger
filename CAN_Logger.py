@@ -5,6 +5,8 @@ import time
 import subprocess
 import signal
 import pyinotify
+import os
+import pickle
 
 q_logs = queue.Queue()
 run=True;
@@ -27,7 +29,43 @@ class shutdown(threading.Thread):
 				print(output)
 
 
+#If there is not enough CPU Power maybe this thread should be started temporary if needed on file change
+#******************************************************
+#Thread to write selected Signals with the corresponding msg to a dict: {msg : [signal1, signal2], msg2 : [signal12, signal13] }
+#******************************************************
+class sig_select_Handler(threading.Thread):
+	def __init__(self, end_flag, change_flag):
+		threading.Thread.__init__(self)
+		self.endeF=end_flag
+		self.changeF=change_flag
+		self.msg_file=os.path.join('/home/pi/datalogger/loggerconfigs/','msg_dict.txt')
+	def run(self):
+		while not self.endeF.isSet():
+			if self.changeF.isSet():
+				file=open(self.msg_file,'rb')
+				msg_dict=pickle.load(file)
+				file.close()
+				fsignals=open(os.path.join('/home/pi/datalogger/loggerconfigs/signals','signals.txt'),'r' )
+				signals=fsignals.read().split(" ")
+				fsignals.close()
+				select_dict={}
+#				print(signals)
+				for msg in msg_dict:
+					sig_selected=[]
+					for signal in signals:
+						for sig in range(msg['sig_count']):
+							if (signal == msg[sig]['sig_name']):
+								sig_selected.append(signal)
+#								print(sig_selected)
+						if sig_selected:
+							select_dict[msg['msg_name']]=sig_selected
+				#Maybe needed to write the dict to a file (pickle preferred
+#				file=open(os.path.join('/home/pi/datalogger/loggerconfigs/signals','testdump.txt'),'w' )
+#				file.write(str(select_dict))
+#				file.close()
+				self.changeF.clear()
 
+				
 
 # SOURCE: https://www.kernel.org/pub/linux/kernel/people/rml/inotify/headers/inotify.h
 # SOURCE: https://github.com/seb-m/pyinotify
@@ -124,11 +162,13 @@ if __name__ == '__main__':
 	
 	Listen_Thread = Listener(end_Flag)
 	Print_Thread = csvPrinter(logs, names, end_Flag)
+	sig_select_Handler = sig_select_Handler(end_Flag, change_Flag)
 	
 	Listen_Thread.start()
 	Print_Thread.start()
+	sig_select_Handler.start()
 	
-	time.sleep(15)
+	time.sleep(30)
 	end_Flag.set()	
 	notifier.stop()
 	Print_Thread.join()
