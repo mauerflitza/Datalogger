@@ -18,13 +18,13 @@ function selector(caller){
 		var cell4 = row.insertCell(3);
 		var cell5 = row.insertCell(4);
 		cell1.innerHTML = '<input readonly name="NameArray[]" type="text" value="'+caller.innerHTML+'">';
-		cell2.innerHTML = '<select name="samplerates" class="sampleselection">\
+		cell2.innerHTML = '<select name="samplerates[]" class="sampleselection">\
 		<option value="1">1ms</option><option value="10">10ms</option><option value="100">100ms</option></select>';
 		cell2.setAttribute('id',caller.innerHTML);
 		cell3.setAttribute('id','test');
 		cell3.innerHTML = ' <input type="radio" name="condition" value='+caller.innerHTML+'>';
 		cell4.style.visibility='hidden';
-		cell4.innerHTML = '<input type="text" name="'+caller.innerHTML+'-start" class= "startcon">';
+		cell4.innerHTML = '<input type="text" name="start[]" class= "startcon">';
 		cell5.innerHTML = '<a href=\'#\' onclick=\'deleteRow(this)\'> \
 		<img src="../Picture/delete.png" alt="Delete signal" style="width:34px;height:34px;border:0;vertical-align:middle;"></a>';}
 	myFuncCalls++;

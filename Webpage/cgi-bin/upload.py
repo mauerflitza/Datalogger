@@ -60,7 +60,7 @@ try:   # NEW
 	print("Content-Type: text/html;charset:UTF-8")   # say generating html
 	print("\n\n")
 	msg_list=dbc_main()
-	filename=os.path.join('/home/pi/datalogger/loggerconfigs/','testdump.txt')
+	filename=os.path.join('/home/pi/datalogger/loggerconfigs/','msg_dict.txt')
 	with open(filename, 'wb') as file:
 		pickle.dump(msg_list, file)
 except:

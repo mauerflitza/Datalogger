@@ -19,7 +19,7 @@
 	<ul class="menu">
 		<li class="menuli"><a class="link" href="Logger_Setup.html">Setup</a></li>
 		<li class="menuli"><a class="link" href="Logging_Settings.html">Logger-Settings</a></li>
-		<li class="menuli"><a class="link" href="Debug.html">Debug</a></li>
+		<li class="menuli"><a class="link" href="../liveView.html">LiveView</a></li>
 		<div class="menuri">
 			<img src="../Picture/LogoBosch.png" style="width:200px;"/>
 		</div>
