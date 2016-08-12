@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- SOURCE: http://stackoverflow.com/questions/14094697/javascript-how-to-create-new-div-dynamically-change-it-move-it-modify-it-in -->
+<html lang="en" class="no-js">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="icon" href="Picture/icon.png">
+		<title>Live-View</title>
+		<link rel="stylesheet" href="css/stylesheet.css">
+		<link rel="stylesheet" type="text/css" href="css/upload/component.css" />
+		<script src="js/jQuery.js"></script>
+		<script src="js/searchlist.js"></script>
+		<script src="js/LiveView_select.js"></script>
+	</head>
+<body>
+	<ul class="menu">
+		<li class="menuli"><a class="link" href="Logger_Setup.html">Setup</a></li>
+		<li class="menuli"><a class="link" href="Logging_Settings.html">Logger-Settings</a></li>
+		<li class="menuli"><a class="link" href="LiveView.html">LiveView/DL</a></li>
+		<div class="menuri">
+			<img src="Picture/LogoBosch.png" style="width:200px;"/>
+		</div>
+	</ul>
+	<div class="Main">
+		<div class="signal_list" id="signals">
+			<input class="search" placeholder="Search" />
+			<button class="sort" data-sort="name">
+			Sort by name
+			</button>
+			<ul class="list"></ul>
+		</div>
+		<div class="content-block">
+		  <div id="Disp_table_div" style="visibility:hidden;">
+		  <p>Signal Display</p>
+		  </div>
+		</div>
+	</div>
+
+<script>
+var options = {
+  valueNames: [ 'sig_sel' ],
+  item: '<li><p  class="sig_sel" onclick="selector(this);"></p></p></li>'
+};
+var values = [
