@@ -38,11 +38,11 @@ class sig_select_Handler(threading.Thread):
 		threading.Thread.__init__(self)
 		self.endeF=end_flag
 		self.changeF=change_flag
-		self.msg_file=os.path.join('/home/pi/datalogger/loggerconfigs/','msg_dict.txt')
 	def run(self):
 		while not self.endeF.isSet():
 			if self.changeF.isSet():
-				file=open(self.msg_file,'rb')
+				msg_file=os.path.join('/home/pi/datalogger/loggerconfigs/','msg_dict.txt')
+				file=open(msg_file,'rb')
 				msg_dict=pickle.load(file)
 				file.close()
 				fsignals=open(os.path.join('/home/pi/datalogger/loggerconfigs/signals','signals.txt'),'r' )
