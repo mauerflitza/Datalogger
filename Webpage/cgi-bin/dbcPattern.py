@@ -1,6 +1,5 @@
 import re
 import time
-import codecs
 
 
 
@@ -20,13 +19,14 @@ def dbcDataReader(dbcFile):
 	
 	
 	for line_b in dbcFile:
+		#ISO-8859-1, da auch deutsche Dateien gelesen werden muessen (Umlaute)
 		line=line_b.decode("ISO-8859-1")
 		#Regular expressions to find all the important information in the dbc file		
 		match=re.match('BO_ (?P<ID>\d+) (?P<msg_name>\w+): (?P<DLC>[0-8]) \w+', line)
 		match2= re.match('\s*SG_ (?P<sig_name>\w+)\s*:'
 						 '\s*(?P<Startbit>\d+)\|(?P<Length>[0-8]+)@\d(?P<Sign>[+-])'
-						 '\s*\((?P<factor>[-+]?[0-9]*\.[0-9]+|[0-9]+),(?P<offset>[-+]?[0-9]*\.[0-9]+|[0-9]+)\)'
-						 '\s*\[(?P<min>[-+]?[0-9]*\.[0-9]+|[0-9]+)\|(?P<max>[-+]?[0-9]*\.[0-9]+|[0-9]+)\]'
+						 '\s*\((?P<factor>[-+]?[0-9]*\.[0-9]+|[0-9]+),(?P<offset>-?[0-9]*[\.[0-9]+|[0-9]+)]?\)'
+						 '\s*\[(?P<min>-?[0-9]*[\.[0-9]+|[0-9]+)\|(?P<max>-?[0-9]*[\.[0-9]+|[0-9]+)]?\]'
 						 '\s*"(?P<unit>.*)"\s*\w*',line)
 		#Message-Dict wird erstellt mti allen zugehoerigen signalen
 		
@@ -48,8 +48,14 @@ def dbcDataReader(dbcFile):
 				return_list.append(diction)
 				#print (return_list)
 			flag=2
-			diction={}			
-	return return_list		
+			print diction
+			diction={}
+	return return_list	
+
+	
+#file=open("Kupplungssteller.dbc","r")
+#dbcDataReader(file)
+#file.close()
 
 
 
