@@ -9,7 +9,9 @@ import os
 import pickle
 import csv
 
+#Queue for transporting the new signal setup to the Logfile-Writer
 q_select = queue.Queue()
+#Queue for the logging data
 q_logs = queue.Queue()
 run=True;
 
@@ -29,11 +31,16 @@ class shutdown(threading.Thread):
 				#Hier noch Unmount der Logfile-Partition
 				output = self.process.communicate()[0]
 				print(output)
+#******************************************************
+#Reads the important information about all the selected signals and gives them back as dict
+#******************************************************
 def msg_transformer():
+	#File with the dict for all aviable messages (binary pickle file)
 	msg_file=os.path.join('/home/pi/datalogger/loggerconfigs/','msg_dict.txt')
 	file=open(msg_file,'rb')
 	msg_dict=pickle.load(file)
 	file.close()
+	#file with the selected signals
 	fsignals=open(os.path.join('/home/pi/datalogger/loggerconfigs/signals','signals.txt'),'r' )
 	signals=fsignals.read().split(" ")
 	fsignals.close()
@@ -73,6 +80,9 @@ class sig_select_Handler(threading.Thread):
 
 # SOURCE: https://www.kernel.org/pub/linux/kernel/people/rml/inotify/headers/inotify.h
 # SOURCE: https://github.com/seb-m/pyinotify
+#******************************************************
+#Thread for controlling changes on the setting files--> new Logger-Setup
+#******************************************************
 class FileEventHandler(pyinotify.ProcessEvent):
 	def my_init(self, changeFlag):
 		self.changeFlag=changeFlag
@@ -95,8 +105,6 @@ class Listener(threading.Thread):
 #			print(mesg)
 			if mesg != None:
 				q_logs.put(mesg)
-
-#PRINTER MÜSSEN NOCH SO GEÄNDERT WERDEN, DASS SIE DAS SIGNAL-dICT VERARBEITEN; NICHT NUR NAMENSLISTE			
 			
 #******************************************************
 #Thread for writing in basic text-file
@@ -129,6 +137,7 @@ class csvPrinter(threading.Thread):
 		self.ids=[]
 		self.names=[]
 		self.row=[]
+		#First setup on start with the old configuration
 		if not q_select.empty():
 			self.selection=q_select.get()
 			self.ids, self.names = self.information_getter(self.selection)
@@ -141,7 +150,6 @@ class csvPrinter(threading.Thread):
 		while not self.ende.isSet():
 			#Runtime for 1 writing loop is around 0.4 ms
 			while not q_logs.empty():
-				start_time=time.time()
 				msg=q_logs.get()
 #				print(msg)
 #				print(mesg)
@@ -150,7 +158,7 @@ class csvPrinter(threading.Thread):
 							self.row[self.ids.index(str(msg.arbitration_id))]=msg.data
 #							row = '.'.join(map(str,(self.row)))
 							csv_writer.writerow(self.row)
-				print("RUNTIME: "+str(time.time()-start_time))
+			#new Setup deteced--> new Logfile
 			if self.new_log_Flag.isSet():
 				self.logfile.close()
 				self.logfile=open("test.csv", "w")
@@ -174,9 +182,11 @@ class csvPrinter(threading.Thread):
 		print(names)
 		return ID,names					
 			
-
-def ctrl_c_handler(signal, frame):
-	global run
+#******************************************************
+#Handler for manual interrupt (not yet fully implemented)
+#******************************************************	
+def ctrl_c_handler(signal, frame, endFlag):
+	end_Flag.set()
 	#LRM30_request(vcPort,'measure','Idle')
 	time.sleep(1)
 	print('Goodbye, cruel world!!!')
@@ -186,28 +196,32 @@ def ctrl_c_handler(signal, frame):
 #Main for Testing (Comment it out when not used)
 #******************************************************
 if __name__ == '__main__':
+	#Initialising all Setups and Flags
 	end_Flag = threading.Event()
 	change_Flag = threading.Event()
 	new_log_Flag = threading.Event()
 	logs = open('test.csv', 'w')
-	names = ["acc", "temp", "gyro"]
 	q_select.put(msg_transformer())
-	signal.signal(signal.SIGINT, ctrl_c_handler)
+	signal.signal(signal.SIGINT, ctrl_c_handler(end_Flag))
 	
+	#File-Watcher on the Setting-Files
 	wm = pyinotify.WatchManager()  # Watch Manager
 	mask = pyinotify.IN_MODIFY  # watched events
 	notifier = pyinotify.ThreadedNotifier(wm, FileEventHandler(changeFlag=change_Flag))
 	notifier.start()
 	wdd = wm.add_watch('/home/pi/datalogger/loggerconfigs/', mask, rec=False)
 	
+	#Initializing Threads
 	Listen_Thread = Listener(end_Flag)
 	Print_Thread = csvPrinter(logs, names, end_Flag, new_log_Flag)
 	sig_select_Handler = sig_select_Handler(end_Flag, change_Flag, new_log_Flag)
 	
+	#Starting Threads
 	Listen_Thread.start()
 	Print_Thread.start()
 	sig_select_Handler.start()
 	
+	#30 seconds runtime and after that the end procedure
 	time.sleep(30)
 	end_Flag.set()	
 	notifier.stop()
