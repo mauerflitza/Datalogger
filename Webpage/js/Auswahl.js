@@ -1,7 +1,7 @@
+var myFuncCalls=0;
 //*************************************************
 //Add one row to the signal-specification-list
 //*************************************************
-var myFuncCalls=0;
 function selector(caller){
 	var form = document.getElementById('Auflistung');
 	var submit = document.getElementById('submit_btn');
@@ -50,7 +50,9 @@ $('table tbody tr').each(function() {
 
    })
 });
-
+//*************************************************
+//Writes all important data from the selected signals to invisible input fields
+//*************************************************
 function saver(){
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //Wichtig für Speichern der Webpage
