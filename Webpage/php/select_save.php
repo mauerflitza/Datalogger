@@ -1,13 +1,7 @@
 <?php
-// ajax save.php
-$errors		= array();	//array to hold validation errors
+
 $data		= array();	//array to pass data back
-// validate the variables ========================================
-	// if any of these variables don't exist, add an error to our $errors array
-	//+++++++++++++++++++++++++++++++++++++++++
-// return a response ==============================================
-	// if there are any errors aray, return a success boolean of false
-	// DO ALL YOUR FORM PROCESSING HERE
+	//Saves signals with correpsponding Sample Rates and Start/Stop Values
 	$selection = fopen('/home/pi/datalogger/loggerconfigs/selection.txt','w');
 	fwrite($selection,"{");
 	$samplerates=$_POST['samplerates'];
