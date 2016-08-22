@@ -1,14 +1,8 @@
 <?php
-// ajax load.php
-$errors		= array();	//array to hold validation errors
+// Writes the Saved data into a textfile
+//Data is the html-code, Start/Stop Value and Sample Rates
 $data		= array();	//array to pass data back
 $values		= array();
-// validate the variables ========================================
-	// if any of these variables don't exist, add an error to our $errors array
-	//+++++++++++++++++++++++++++++++++++++++++
-// return a response ==============================================
-	// if there are any errors aray, return a success boolean of false
-	// DO ALL YOUR FORM PROCESSING HERE
 	$savings = fopen('/home/pi/datalogger/loggerconfigs/savings.txt','r');
 	if($savings) {
 	while (($line = fgets($savings)) !== false) {
