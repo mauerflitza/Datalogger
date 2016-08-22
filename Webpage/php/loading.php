@@ -1,5 +1,5 @@
 <?php
-// Writes the Saved data into a textfile
+// Reads the Saved data into a textfile
 //Data is the html-code, Start/Stop Value and Sample Rates
 $data		= array();	//array to pass data back
 $values		= array();
