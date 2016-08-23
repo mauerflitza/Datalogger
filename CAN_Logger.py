@@ -135,27 +135,33 @@ class csvPrinter(threading.Thread):
 		self.new_log_Flag=new_log_Flag
 		self.selection={}
 		self.ids=[]
+		self.ID=[]
 		self.names=[]
 		self.row=[]
 		#First setup on start with the old configuration
 		if not q_select.empty():
 			self.selection=q_select.get()
-			self.ids, self.names = self.information_getter(self.selection)
+			self.ids, self.names, self.ID = self.information_getter(self.selection)
 			self.logfile.write(','.join(self.names) + "\n")
 			for i in range(len(self.ids)):
-				self.row.append(' ')
-			
+				self.row.append(' ')			
 	def run(self): 
 		csv_writer=csv.writer(self.logfile)
 		while not self.ende.isSet():
 			#Runtime for 1 writing loop is around 0.4 ms
 			while not q_logs.empty():
 				msg=q_logs.get()
-#				print(msg)
-#				print(mesg)
 				if msg != None:
 					if str(msg.arbitration_id) in self.ids:
+							databits=0
 							self.row[self.ids.index(str(msg.arbitration_id))]=msg.data
+							#Reversed order is maybe needed, just uncomment it
+#							for byte in reversed(msg.data):
+							for byte in msg.data:
+								databits=(databits<<8) | byte
+							print(bin(databits))
+							self.data_converter(databits, str(msg.arbitration_id))
+							#self.data_converter(msg.data)
 #							row = '.'.join(map(str,(self.row)))
 							csv_writer.writerow(self.row)
 			#new Setup deteced--> new Logfile
@@ -165,7 +171,7 @@ class csvPrinter(threading.Thread):
 #				self.logfile=open(os.path.join("/home/pi/datalogger/logfiles","HIER-NOCH-NAMEN-MIT-DATUM.csv"), "w")
 				if not q_select.empty():
 					self.selection = q_select.get()
-					self.id, self.names = self.information_getter(self.selection)
+					self.id, self.names, self.ID = self.information_getter(self.selection)
 				self.logfile.write(','.join(self.names) + "\n")
 				for i in range(len(self.ids)):
 					self.row.append(' ')
@@ -174,18 +180,26 @@ class csvPrinter(threading.Thread):
 				self.new_log_Flag.clear()
 		self.logfile.close()
 	def information_getter(self, selection):
-		ID=[]
+		ids=[]
+		for signal in selection.keys():
+			ids.append(selection[signal]['ID'])
+		ID={ID: [] for ID in ids}
 		names=[]
 		for signal in selection.keys():
-			ID.append(selection[signal]['ID'])
+			ID[selection[signal]['ID']].append(signal)
 			names.append(signal)
-		print(names)
-		return ID,names					
+		return ids,names, ID			
+
+	def data_converter(self,databits, id):
+		for signal in self.ID[id]:
+			value= (databits >> int(self.selection[signal]['Signal']['Startbit']) ) & int(self.selection[signal]['Signal']['Length'])
+			print(value)
+			print(bin(value))				
 			
 #******************************************************
 #Handler for manual interrupt (not yet fully implemented)
 #******************************************************	
-def ctrl_c_handler(signal, frame, endFlag):
+def ctrl_c_handler(signal, frame):
 	end_Flag.set()
 	#LRM30_request(vcPort,'measure','Idle')
 	time.sleep(1)
@@ -200,9 +214,10 @@ if __name__ == '__main__':
 	end_Flag = threading.Event()
 	change_Flag = threading.Event()
 	new_log_Flag = threading.Event()
+	names=[]
 	logs = open('test.csv', 'w')
 	q_select.put(msg_transformer())
-	signal.signal(signal.SIGINT, ctrl_c_handler(end_Flag))
+	signal.signal(signal.SIGINT, ctrl_c_handler)
 	
 	#File-Watcher on the Setting-Files
 	wm = pyinotify.WatchManager()  # Watch Manager

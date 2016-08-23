@@ -2,7 +2,8 @@
 //Add one row to the Live-View-List
 //*************************************************
 var myFuncCalls=0;
-websocketwert=3;
+//BISHER NUR TEST-WERT
+websocketwert=3333333;
 function selector(caller){
 	var table = document.getElementById('Disp_table');
 	var box=document.getElementById('Disp_table_div');
