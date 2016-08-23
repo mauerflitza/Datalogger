@@ -8,6 +8,7 @@ import pyinotify
 import os
 import pickle
 import csv
+import itertools
 
 #Queue for transporting the new signal setup to the Logfile-Writer
 q_select = queue.Queue()
@@ -150,23 +151,21 @@ class csvPrinter(threading.Thread):
 		csv_writer=csv.writer(self.logfile)
 		while not self.ende.isSet():
 			#Runtime for 1 writing loop is around 0.4 ms
-			print("outside")
+			#For Runtime measurement uncomment
+#			start_time=time.time()
 			while not q_logs.empty():
-				print("inside")
-				print(q_logs.qsize())
-				print(q_logs.qsize())
 				msg=q_logs.get()
 				if str(msg.arbitration_id) in self.ids:
 						databits=0
-						self.row[self.ids.index(str(msg.arbitration_id))]=msg.data
+#						self.row[self.ids.index(str(msg.arbitration_id))]=msg.data
 						#Reversed order is maybe needed, just uncomment it
-#								for byte in reversed(msg.data):
+#						for byte in reversed(msg.data):
 						for byte in msg.data:
 							databits=(databits<<8) | byte
-						#print(bin(databits))
-						self.data_converter(databits, str(msg.arbitration_id))
-						#self.data_converter(msg.data)
-#							row = '.'.join(map(str,(self.row)))
+						signals,log_vals = self.data_converter(databits, str(msg.arbitration_id))
+						for signal, value in zip(signals,log_vals):
+							if signal in self.names:
+								self.row[self.names.index(signal)]=value
 						csv_writer.writerow(self.row)
 			#new Setup deteced--> new Logfile
 			if self.new_log_Flag.isSet():
@@ -183,6 +182,8 @@ class csvPrinter(threading.Thread):
 				csv_writer=csv.writer(self.logfile)
 				print("*********************NEW LOGFILE*******************")
 				self.new_log_Flag.clear()
+			#For Runtime measurement uncomment
+#			print(time.time()-start_time)
 		self.logfile.close()
 	def information_getter(self, selection):
 		ids=[]
@@ -194,19 +195,22 @@ class csvPrinter(threading.Thread):
 			ID[selection[signal]['ID']].append(signal)
 			names.append(signal)
 		return ids,names, ID			
-
+	#Transform the byte data in Float values with factor and offset (returns list with all neccessary data
 	def data_converter(self,databits, id):
+		values=[]
 		for signal in self.ID[id]:
-			value= (databits >> int(self.selection[signal]['Signal']['Startbit']) ) & 2**int(self.selection[signal]['Signal']['Length'])
+			value= (databits >> int(self.selection[signal]['Signal']['Startbit']) ) & 2**int(self.selection[signal]['Signal']['Length'])-1
 			if self.selection[signal]['Signal']['factor'] and self.selection[signal]['Signal']['factor']!=" ":
 				if self.selection[signal]['Signal']['offset'] and self.selection[signal]['Signal']['offset']!=" " :
-					real_val=int(self.selection[signal]['Signal']['factor']) * value + int(self.selection[signal]['Signal']['offset'])
+					real_val=float(self.selection[signal]['Signal']['factor']) * value + float(self.selection[signal]['Signal']['offset'])
 				else:
-					real_val=int(self.selection[signal]['Signal']['factor']) * value  
+					real_val=float(self.selection[signal]['Signal']['factor']) * value  
 			elif self.selection[signal]['Signal']['offset'] and self.selection[signal]['Signal']['offset']!=" ":
-				real_val=value + int(self.selection[signal]['Signal']['offset'])	
-			#print(value)
-			#print(bin(value))
+				real_val=value + float(self.selection[signal]['Signal']['offset'])	
+#			print(real_val)
+			values.append(real_val)
+		return self.ID[id], values
+		
 			
 #******************************************************
 #Handler for manual interrupt (not yet fully implemented)
