@@ -197,7 +197,7 @@ class csvPrinter(threading.Thread):
 
 	def data_converter(self,databits, id):
 		for signal in self.ID[id]:
-			value= (databits >> int(self.selection[signal]['Signal']['Startbit']) ) & int(self.selection[signal]['Signal']['Length'])
+			value= (databits >> int(self.selection[signal]['Signal']['Startbit']) ) & 2**int(self.selection[signal]['Signal']['Length'])
 			if self.selection[signal]['Signal']['factor']:
 				if self.selection[signal]['Signal']['offset']:
 					real_val=int(self.selection[signal]['Signal']['factor']) * value + int(self.selection[signal]['Signal']['offset'])
