@@ -142,6 +142,7 @@ class csvPrinter(threading.Thread):
 		if not q_select.empty():
 			self.selection=q_select.get()
 			self.ids, self.names, self.ID = self.information_getter(self.selection)
+			#Unit hinzufuegen noch wenn eine vorhanden ist
 			self.logfile.write(','.join(self.names) + "\n")
 			for i in range(len(self.ids)):
 				self.row.append(' ')			
@@ -149,21 +150,24 @@ class csvPrinter(threading.Thread):
 		csv_writer=csv.writer(self.logfile)
 		while not self.ende.isSet():
 			#Runtime for 1 writing loop is around 0.4 ms
+			print("outside")
 			while not q_logs.empty():
+				print("inside")
+				print(q_logs.qsize())
+				print(q_logs.qsize())
 				msg=q_logs.get()
-				if msg != None:
-					if str(msg.arbitration_id) in self.ids:
-							databits=0
-							self.row[self.ids.index(str(msg.arbitration_id))]=msg.data
-							#Reversed order is maybe needed, just uncomment it
-#							for byte in reversed(msg.data):
-							for byte in msg.data:
-								databits=(databits<<8) | byte
-							print(bin(databits))
-							self.data_converter(databits, str(msg.arbitration_id))
-							#self.data_converter(msg.data)
+				if str(msg.arbitration_id) in self.ids:
+						databits=0
+						self.row[self.ids.index(str(msg.arbitration_id))]=msg.data
+						#Reversed order is maybe needed, just uncomment it
+#								for byte in reversed(msg.data):
+						for byte in msg.data:
+							databits=(databits<<8) | byte
+						#print(bin(databits))
+						self.data_converter(databits, str(msg.arbitration_id))
+						#self.data_converter(msg.data)
 #							row = '.'.join(map(str,(self.row)))
-							csv_writer.writerow(self.row)
+						csv_writer.writerow(self.row)
 			#new Setup deteced--> new Logfile
 			if self.new_log_Flag.isSet():
 				self.logfile.close()
@@ -172,6 +176,7 @@ class csvPrinter(threading.Thread):
 				if not q_select.empty():
 					self.selection = q_select.get()
 					self.id, self.names, self.ID = self.information_getter(self.selection)
+				#Unit hinzufuegen noch wenn eine vorhanden ist
 				self.logfile.write(','.join(self.names) + "\n")
 				for i in range(len(self.ids)):
 					self.row.append(' ')
@@ -193,8 +198,15 @@ class csvPrinter(threading.Thread):
 	def data_converter(self,databits, id):
 		for signal in self.ID[id]:
 			value= (databits >> int(self.selection[signal]['Signal']['Startbit']) ) & int(self.selection[signal]['Signal']['Length'])
-			print(value)
-			print(bin(value))				
+			if self.selection[signal]['Signal']['factor']:
+				if self.selection[signal]['Signal']['offset']:
+					real_val=int(self.selection[signal]['Signal']['factor']) * value + int(self.selection[signal]['Signal']['offset'])
+				else:
+					real_val=int(self.selection[signal]['Signal']['factor']) * value  
+			elif self.selection[signal]['Signal']['offset']:
+				real_val=value + int(self.selection[signal]['Signal']['offset'])	
+			#print(value)
+			#print(bin(value))
 			
 #******************************************************
 #Handler for manual interrupt (not yet fully implemented)
