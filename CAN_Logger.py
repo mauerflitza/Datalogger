@@ -8,7 +8,6 @@ import pyinotify
 import os
 import pickle
 import csv
-import itertools
 
 #Queue for transporting the new signal setup to the Logfile-Writer
 q_select = queue.Queue()
