@@ -9,10 +9,19 @@ import os
 import pickle
 import csv
 
+import socket
+import tornado.httpserver
+import tornado.websocket
+import tornado.ioloop
+from tornado.ioloop import PeriodicCallback
+import tornado.web
+
 #Queue for transporting the new signal setup to the Logfile-Writer
 q_select = queue.Queue()
 #Queue for the logging data
 q_logs = queue.Queue()
+#Queue for the LiveView
+q_live = queue.Queue()
 run=True;
 
 #******************************************************
@@ -31,6 +40,43 @@ class shutdown(threading.Thread):
 				#Hier noch Unmount der Logfile-Partition
 				output = self.process.communicate()[0]
 				print(output)
+
+#******************************************************
+# Klasse des Websockets
+# Periodischer Callback wird erstellt, der die Werte aus der Queue zurueck gibt	
+#******************************************************
+class WSHandler(tornado.websocket.WebSocketHandler):
+    def check_origin(self, origin):
+      return True
+    
+    def open(self):
+        self.callback = PeriodicCallback(self.send_werte, 15)
+        self.callback.start()
+        print ('Connection open')	
+    def send_werte(self):
+    	if not q_live.empty():
+		self.write_message(q_live.get())
+
+    def on_message(self, empf):
+		  print 'Daten recievied: '
+
+    def on_close(self):
+		print 'Connection closed!'
+		self.callback.stop()
+		
+		
+def start_Tornado():
+  application = tornado.web.Application([(r'/', WSHandler),])
+  http_server = tornado.httpserver.HTTPServer(application)
+  http_server.listen(8888)
+  tornado.ioloop.IOLoop.instance().start()
+
+# Websocket wird wieder geschlossen
+def stop_tornado():
+    ioloop = tornado.ioloop.IOLoop.instance()
+    ioloop.add_callback(ioloop.stop)
+    print "Asked Tornado to exit"
+				
 #******************************************************
 #Reads the important information about all the selected signals and gives them back as dict
 #******************************************************
@@ -105,6 +151,7 @@ class Listener(threading.Thread):
 #			print(mesg)
 			if mesg != None:
 				q_logs.put(mesg)
+				q_live.put(mesg)
 			
 #******************************************************
 #Thread for writing in basic text-file
@@ -234,6 +281,11 @@ if __name__ == '__main__':
 	q_select.put(msg_transformer())
 	signal.signal(signal.SIGINT, ctrl_c_handler)
 	
+	#http://stackoverflow.com/questions/5375220/how-do-i-stop-tornado-web-server
+	#Notwendig zum Beenden von Tornado
+	t_websocket = threading.Thread(target=start_Tornado)
+	t_websocket.start()
+	
 	#File-Watcher on the Setting-Files
 	wm = pyinotify.WatchManager()  # Watch Manager
 	mask = pyinotify.IN_MODIFY  # watched events
@@ -256,4 +308,6 @@ if __name__ == '__main__':
 	end_Flag.set()	
 	notifier.stop()
 	Print_Thread.join()
+	stop_tornado()
+	t_websocket.join()
 	logs.close()
