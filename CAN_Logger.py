@@ -46,22 +46,22 @@ class shutdown(threading.Thread):
 # Periodischer Callback wird erstellt, der die Werte aus der Queue zurueck gibt	
 #******************************************************
 class WSHandler(tornado.websocket.WebSocketHandler):
-    def check_origin(self, origin):
-      return True
+	def check_origin(self, origin):
+		return True
     
-    def open(self):
-        self.callback = PeriodicCallback(self.send_werte, 15)
-        self.callback.start()
-        print ('Connection open')	
-    def send_werte(self):
-    	if not q_live.empty():
-		self.write_message(q_live.get())
+	def open(self):
+        	self.callback = PeriodicCallback(self.send_werte, 15)
+	        self.callback.start()
+	        print ('Connection open')	
+	def send_werte(self):
+		if not q_live.empty():
+			self.write_message(str(q_live.get()))
 
-    def on_message(self, empf):
-		  print 'Daten recievied: '
+	def on_message(self, empf):
+		  print('Daten recievied: ')
 
-    def on_close(self):
-		print 'Connection closed!'
+	def on_close(self):
+		print('Connection closed!')
 		self.callback.stop()
 		
 		
@@ -75,7 +75,7 @@ def start_Tornado():
 def stop_tornado():
     ioloop = tornado.ioloop.IOLoop.instance()
     ioloop.add_callback(ioloop.stop)
-    print "Asked Tornado to exit"
+    print("Asked Tornado to exit")
 				
 #******************************************************
 #Reads the important information about all the selected signals and gives them back as dict
