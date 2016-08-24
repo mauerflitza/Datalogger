@@ -54,13 +54,18 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 		return True
     
 	def open(self):
-        	self.callback = PeriodicCallback(self.send_werte, 15)
-	        self.callback.start()
-	        print ('Connection open')	
+		with q_live.mutex:
+			q_live.queue.clear()
+		self.callback = PeriodicCallback(self.send_werte, 1)
+		self.callback.start()
+		print ('Connection open')	
 	def send_werte(self):
 		if not q_live.empty():
 			self.write_message(str(q_live.get()))
-
+			print(q_live.qsize())
+			if q_live.qsize() >15:
+				with q_live.mutex:
+					q_live.queue.clear()
 	def on_message(self, empf):
 		  print('Daten recievied: ')
 
@@ -178,8 +183,11 @@ class Printer(threading.Thread):
 #Thread for writing in .csv-file
 #******************************************************					
 class csvPrinter(threading.Thread):
-	def __init__(self,logfile,end_flag, new_log_Flag):	
-		self.logfile = logfile
+	def __init__(self,end_flag, new_log_Flag):	
+		threading.Thread.__init__(self)
+		self.ende=end_flag
+		#Hier noch Logfile-Name mit Datum hin
+		self.logfile=open("test.csv","w")
 		self.new_log_Flag=new_log_Flag
 		self.names=[]
 		self.row=[]
@@ -187,12 +195,12 @@ class csvPrinter(threading.Thread):
 			self.names=q_name.get()
 			#Unit hinzufuegen noch wenn eine vorhanden ist
 			self.logfile.write(','.join(self.names) + "\n")
-			for i in range(len(self.ids)):
+			for i in range(len(self.names)):
 				self.row.append(' ')
 	def run(self): 
 		csv_writer=csv.writer(self.logfile)
 		while not self.ende.isSet():
-			if not q_log.empty():
+			if not q_logs.empty():
 				signals, log_vals = q_logs.get()
 				for signal, value in zip(signals,log_vals):
 					if signal in self.names:
@@ -211,8 +219,8 @@ class csvPrinter(threading.Thread):
 				csv_writer=csv.writer(self.logfile)
 				print("*********************NEW LOGFILE*******************")
 				#Clear any possible old data from the Queue
-				with q_logs.mutex:
-					q_logs.queue.clear()
+#				with q_logs.mutex:
+#					q_logs.queue.clear()
 		self.logfile.close()
 		
 class DataManager(threading.Thread):
@@ -228,27 +236,24 @@ class DataManager(threading.Thread):
 		if not q_select.empty():
 			self.selection=q_select.get()
 			self.ids, self.names, self.ID = self.information_getter(self.selection)
-			#Unit hinzufuegen noch wenn eine vorhanden ist
-			self.logfile.write(','.join(self.names) + "\n")
-			for i in range(len(self.ids)):
-				self.row.append(' ')	
+			q_name.put(self.names)	
 	def run(self): 
 		while not self.ende.isSet():
 			#Runtime for 1 writing loop is around 0.4 ms
 			#For Runtime measurement uncomment
 #			start_time=time.time()
-			while not q_logs.empty():
+			while not q_data.empty():
 				msg=q_data.get()
 				if str(msg.arbitration_id) in self.ids:
-						databits=0
-#						self.row[self.ids.index(str(msg.arbitration_id))]=msg.data
-						#Reversed order is maybe needed, just uncomment it
-#						for byte in reversed(msg.data):
-						for byte in msg.data:
-							databits=(databits<<8) | byte
-						signals,log_vals = self.data_converter(databits, str(msg.arbitration_id))
-						q_logs.put((signals,log_vals))
-						q_live.put((signals,log_vals))
+					databits=0
+#					self.row[self.ids.index(str(msg.arbitration_id))]=msg.data
+					#Reversed order is maybe needed, just uncomment it
+#					for byte in reversed(msg.data):
+					for byte in msg.data:
+						databits=(databits<<8) | byte
+					signals,log_vals = self.data_converter(databits, str(msg.arbitration_id))
+					q_logs.put((signals,log_vals))
+					q_live.put((signals,log_vals))
 				if self.new_log_Flag.isSet():
 					if not q_select.empty():
 						self.selection = q_select.get()
@@ -309,12 +314,7 @@ if __name__ == '__main__':
 	logs = open('test.csv', 'w')
 	q_select.put(msg_transformer())
 	signal.signal(signal.SIGINT, ctrl_c_handler)
-	
-	#http://stackoverflow.com/questions/5375220/how-do-i-stop-tornado-web-server
-	#Notwendig zum Beenden von Tornado
-	t_websocket = threading.Thread(target=start_Tornado)
-	t_websocket.start()
-	
+		
 	#File-Watcher on the Setting-Files
 	wm = pyinotify.WatchManager()  # Watch Manager
 	mask = pyinotify.IN_MODIFY  # watched events
@@ -323,13 +323,21 @@ if __name__ == '__main__':
 	wdd = wm.add_watch('/home/pi/datalogger/loggerconfigs/', mask, rec=False)
 	
 	#Initializing Threads
+	print("Initializing...")
 	Listen_Thread = Listener(end_Flag)
-	Print_Thread = csvPrinter(logs, end_Flag, new_log_Flag)
-	Print_Thread = csvPrinter(end_Flag)
+	Manager_Thread = DataManager(end_Flag, new_log_Flag)
+	Print_Thread = csvPrinter(end_Flag, new_log_Flag)
 	sig_select_Handler = sig_select_Handler(end_Flag, change_Flag, new_log_Flag)
-	
+	#http://stackoverflow.com/questions/5375220/how-do-i-stop-tornado-web-server
+	#Notwendig zum Beenden von Tornado
+	t_websocket = threading.Thread(target=start_Tornado)
+	print("finished initialized")
+	print("starting Threads ...")
+	t_websocket.start()
+
 	#Starting Threads
 	Listen_Thread.start()
+	Manager_Thread.start()
 	Print_Thread.start()
 	sig_select_Handler.start()
 	
@@ -339,5 +347,6 @@ if __name__ == '__main__':
 	notifier.stop()
 	Print_Thread.join()
 	stop_tornado()
+	print("LOGS:")
+	print(q_logs.qsize())
 	t_websocket.join()
-	logs.close()
