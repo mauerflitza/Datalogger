@@ -192,9 +192,9 @@ class csvPrinter(threading.Thread):
 		self.names=[]
 		self.row=[]
 		if not q_name.empty():
-			self.names=q_name.get()
+			self.names, titles=q_name.get()
 			#Unit hinzufuegen noch wenn eine vorhanden ist
-			self.logfile.write(','.join(self.names) + "\n")
+			self.logfile.write(','.join(titles) + "\n")
 			for i in range(len(self.names)):
 				self.row.append(' ')
 	def run(self): 
@@ -211,9 +211,9 @@ class csvPrinter(threading.Thread):
 				self.logfile.close()
 				self.logfile=open("test.csv", "w")
 #				self.logfile=open(os.path.join("/home/pi/datalogger/logfiles","HIER-NOCH-NAMEN-MIT-DATUM.csv"), "w")
-				q_name.get()
+				self.names, titles=q_name.get()
 				#Unit hinzufuegen noch wenn eine vorhanden ist
-				self.logfile.write(','.join(self.names) + "\n")
+				self.logfile.write(','.join(titles) + "\n")
 				for i in range(len(self.names)):
 					self.row.append(' ')
 				csv_writer=csv.writer(self.logfile)
@@ -235,8 +235,8 @@ class DataManager(threading.Thread):
 		#First setup on start with the old configuration
 		if not q_select.empty():
 			self.selection=q_select.get()
-			self.ids, self.names, self.ID = self.information_getter(self.selection)
-			q_name.put(self.names)	
+			self.ids, self.names, self.ID, titles = self.information_getter(self.selection)
+			q_name.put((self.names,titles))	
 	def run(self): 
 		while not self.ende.isSet():
 			#Runtime for 1 writing loop is around 0.4 ms
@@ -257,8 +257,8 @@ class DataManager(threading.Thread):
 				if self.new_log_Flag.isSet():
 					if not q_select.empty():
 						self.selection = q_select.get()
-						self.id, self.names, self.ID = self.information_getter(self.selection)
-						q_name.put(self.names)
+						self.id, self.names, self.ID, titles = self.information_getter(self.selection)
+						q_name.put((self.names, titles))
 					#Clear any possible old data from the Queue
 					with q_logs.mutex:
 						q_logs.queue.clear()
@@ -272,10 +272,15 @@ class DataManager(threading.Thread):
 			ids.append(selection[signal]['ID'])
 		ID={ID: [] for ID in ids}
 		names=[]
+		titles=[]
 		for signal in selection.keys():
 			ID[selection[signal]['ID']].append(signal)
 			names.append(signal)
-		return ids,names, ID			
+			if selection[signal]['Signal']['unit'] and selection[signal]['Signal']['unit']!=" ":
+				titles.append(signal + "[" + selection[signal]['Signal']['unit'] + "]")
+			else:
+				titles.append(signal)
+		return ids,names, ID, titles			
 	#Transform the byte data in Float values with factor and offset (returns list with all neccessary data
 	def data_converter(self,databits, id):
 		values=[]
