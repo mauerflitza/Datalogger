@@ -18,10 +18,14 @@ import tornado.web
 
 #Queue for transporting the new signal setup to the Logfile-Writer
 q_select = queue.Queue()
+#Queue for the raw data
+q_data = queue.Queue()
 #Queue for the logging data
 q_logs = queue.Queue()
 #Queue for the LiveView
 q_live = queue.Queue()
+#Queue for the selected Names
+q_name = queue.Queue()
 run=True;
 
 #******************************************************
@@ -150,8 +154,7 @@ class Listener(threading.Thread):
 			mesg=self.bus.recv(0)
 #			print(mesg)
 			if mesg != None:
-				q_logs.put(mesg)
-				q_live.put(mesg)
+				q_data.put(mesg)
 			
 #******************************************************
 #Thread for writing in basic text-file
@@ -175,16 +178,52 @@ class Printer(threading.Thread):
 #Thread for writing in .csv-file
 #******************************************************					
 class csvPrinter(threading.Thread):
-	def __init__(self,logfile,names, end_flag, new_log_Flag):
+	def __init__(self,logfile,end_flag, new_log_Flag):	
+		self.logfile = logfile
+		self.new_log_Flag=new_log_Flag
+		self.names=[]
+		self.row=[]
+		if not q_name.empty():
+			self.names=q_name.get()
+			#Unit hinzufuegen noch wenn eine vorhanden ist
+			self.logfile.write(','.join(self.names) + "\n")
+			for i in range(len(self.ids)):
+				self.row.append(' ')
+	def run(self): 
+		csv_writer=csv.writer(self.logfile)
+		while not self.ende.isSet():
+			if not q_log.empty():
+				signals, log_vals = q_logs.get()
+				for signal, value in zip(signals,log_vals):
+					if signal in self.names:
+						self.row[self.names.index(signal)]=value
+				csv_writer.writerow(self.row)
+			#new Setup deteced--> new Logfile
+			if not q_name.empty():
+				self.logfile.close()
+				self.logfile=open("test.csv", "w")
+#				self.logfile=open(os.path.join("/home/pi/datalogger/logfiles","HIER-NOCH-NAMEN-MIT-DATUM.csv"), "w")
+				q_name.get()
+				#Unit hinzufuegen noch wenn eine vorhanden ist
+				self.logfile.write(','.join(self.names) + "\n")
+				for i in range(len(self.names)):
+					self.row.append(' ')
+				csv_writer=csv.writer(self.logfile)
+				print("*********************NEW LOGFILE*******************")
+				#Clear any possible old data from the Queue
+				with q_logs.mutex:
+					q_logs.queue.clear()
+		self.logfile.close()
+		
+class DataManager(threading.Thread):
+	def __init__(self, end_flag, new_log_Flag):
 		threading.Thread.__init__(self)
 		self.ende=end_flag
-		self.logfile = logfile
 		self.new_log_Flag=new_log_Flag
 		self.selection={}
 		self.ids=[]
 		self.ID=[]
 		self.names=[]
-		self.row=[]
 		#First setup on start with the old configuration
 		if not q_select.empty():
 			self.selection=q_select.get()
@@ -192,15 +231,14 @@ class csvPrinter(threading.Thread):
 			#Unit hinzufuegen noch wenn eine vorhanden ist
 			self.logfile.write(','.join(self.names) + "\n")
 			for i in range(len(self.ids)):
-				self.row.append(' ')			
+				self.row.append(' ')	
 	def run(self): 
-		csv_writer=csv.writer(self.logfile)
 		while not self.ende.isSet():
 			#Runtime for 1 writing loop is around 0.4 ms
 			#For Runtime measurement uncomment
 #			start_time=time.time()
 			while not q_logs.empty():
-				msg=q_logs.get()
+				msg=q_data.get()
 				if str(msg.arbitration_id) in self.ids:
 						databits=0
 #						self.row[self.ids.index(str(msg.arbitration_id))]=msg.data
@@ -209,28 +247,20 @@ class csvPrinter(threading.Thread):
 						for byte in msg.data:
 							databits=(databits<<8) | byte
 						signals,log_vals = self.data_converter(databits, str(msg.arbitration_id))
-						for signal, value in zip(signals,log_vals):
-							if signal in self.names:
-								self.row[self.names.index(signal)]=value
-						csv_writer.writerow(self.row)
-			#new Setup deteced--> new Logfile
-			if self.new_log_Flag.isSet():
-				self.logfile.close()
-				self.logfile=open("test.csv", "w")
-#				self.logfile=open(os.path.join("/home/pi/datalogger/logfiles","HIER-NOCH-NAMEN-MIT-DATUM.csv"), "w")
-				if not q_select.empty():
-					self.selection = q_select.get()
-					self.id, self.names, self.ID = self.information_getter(self.selection)
-				#Unit hinzufuegen noch wenn eine vorhanden ist
-				self.logfile.write(','.join(self.names) + "\n")
-				for i in range(len(self.ids)):
-					self.row.append(' ')
-				csv_writer=csv.writer(self.logfile)
-				print("*********************NEW LOGFILE*******************")
-				self.new_log_Flag.clear()
+						q_logs.put((signals,log_vals))
+						q_live.put((signals,log_vals))
+				if self.new_log_Flag.isSet():
+					if not q_select.empty():
+						self.selection = q_select.get()
+						self.id, self.names, self.ID = self.information_getter(self.selection)
+						q_name.put(self.names)
+					#Clear any possible old data from the Queue
+					with q_logs.mutex:
+						q_logs.queue.clear()
+					self.new_log_Flag.clear()
 			#For Runtime measurement uncomment
 #			print(time.time()-start_time)
-		self.logfile.close()
+
 	def information_getter(self, selection):
 		ids=[]
 		for signal in selection.keys():
@@ -276,7 +306,6 @@ if __name__ == '__main__':
 	end_Flag = threading.Event()
 	change_Flag = threading.Event()
 	new_log_Flag = threading.Event()
-	names=[]
 	logs = open('test.csv', 'w')
 	q_select.put(msg_transformer())
 	signal.signal(signal.SIGINT, ctrl_c_handler)
@@ -295,7 +324,8 @@ if __name__ == '__main__':
 	
 	#Initializing Threads
 	Listen_Thread = Listener(end_Flag)
-	Print_Thread = csvPrinter(logs, names, end_Flag, new_log_Flag)
+	Print_Thread = csvPrinter(logs, end_Flag, new_log_Flag)
+	Print_Thread = csvPrinter(end_Flag)
 	sig_select_Handler = sig_select_Handler(end_Flag, change_Flag, new_log_Flag)
 	
 	#Starting Threads
