@@ -48,7 +48,7 @@ def dbcDataReader(dbcFile):
 				return_list.append(diction)
 				#print (return_list)
 			flag=2
-			print diction
+#			print diction
 			diction={}
 	return return_list	
 

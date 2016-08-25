@@ -1,0 +1,19 @@
+];
+
+var signalList = new List('signals', options, values);
+
+$(document).ready(function () {{
+   $.each({filenames}, function( index, name) {{
+   	$('#down_sel').append($('<option>', {{
+	   value:name,
+	   text:name
+	}}));
+   }});
+   $('#downloadbtn').click(function() {{
+	window.location = "../php/download.php?file="+$('#down_sel').val();
+   }});
+}});
+</script>
+
+</body>
+</html>

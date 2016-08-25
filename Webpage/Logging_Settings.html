@@ -1,73 +1,11 @@
 <!DOCTYPE html>
-<!-- SOURCE: http://stackoverflow.com/questions/14094697/javascript-how-to-create-new-div-dynamically-change-it-move-it-modify-it-in -->
-<html lang="en" class="no-js">
-	<head>
-		<meta charset="UTF-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="icon" href="Picture/icon.png">
-		<title>Logger-Setup</title>
-		<link rel="stylesheet" href="css/stylesheet.css">
-		<link rel="stylesheet" type="text/css" href="css/upload/component.css" />
-		<script src="js/jQuery.js"></script>
-		<script src="js/searchlist.js"></script>
-		<script src="js/Auswahl.js"></script>
-	</head>
+<html lang="eng">
 <body>
-	<ul class="menu">
-		<li class="menuli"><a class="link" href="Logger_Setup.html">Setup</a></li>
-		<li class="menuli"><a class="link" href="Logging_Settings.html">Logger-Settings</a></li>
-		<li class="menuli"><a class="link" href="Debug.html">Debug</a></li>
-		<div class="menuri">
-			<img src="Picture/LogoBosch.png" style="width:200px;"/>
-		</div>
-	</ul>
-	<div class="Main">
-		<div class="signal_list" id="signals">
-			<input class="search" placeholder="Search" />
-			<button class="sort" data-sort="name">
-			Sort by name
-			</button>
-			<ul class="list"></ul>
-		</div>
-		<div class="content-block">
-			<form id="Auflistung" text-align:"center;"  > 
-			  <table id="Sign_table" style="visibility:hidden;">
-				  <th>Name</th>
-				  <th>Sample Rate</th>
-				  <th>Start/Stop</th>
-			  </table>
-			</form>
-			<form id="Saving" method="post" action="cgi-bin/saving.py" onsubmit="saver()" text-align:"center;"  > 
-			  <input type="text" name="SampleRates" id="SampleRates" style="visibility:hidden;"/>
-			  <input type="text" name="StartVal" id="StartVal" style="visibility:hidden;"/>
-			  <input type="text" name="webpage" id="webpage" style="visibility:hidden;"/>
-			  <input name="submit_btn" type="submit" value="Submit">
-			</form>
-		</div>
-	</div>
-
-<script>
-var options = {
-  valueNames: [ 'sig_sel' ],
-  item: '<li><p  class="sig_sel" onclick="selector(this);"></p></p></li>'
-};
-
-var values = [
-    {sig_sel: 'acc'},
-    {sig_sel: 'gyro'},
-    {sig_sel: 'acc_y'}];
-
-var signalList = new List('signals', options, values);
-
-
-//EXTREM WICHTIGE FUNKTION FUER MEIN CGI
-signalList.add({
-  sig_sel: "temp",
-});
-
+<form name="Tmp" method="POST" action="/cgi-bin/loading.py">
+<input type="hidden" name="temp_in" value="Redirect">
+</form>
+<script type="text/javascript" language="JavaScript">
+document.Tmp.submit();
 </script>
-
-</body>
+</body>	
 </html>
-

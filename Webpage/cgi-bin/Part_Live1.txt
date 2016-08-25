@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<!-- SOURCE: http://stackoverflow.com/questions/14094697/javascript-how-to-create-new-div-dynamically-change-it-move-it-modify-it-in -->
-<html lang="en" class="no-js">
+<!DOCTYPE html> <!-- SOURCE: http://stackoverflow.com/questions/14094697/javascript-how-to-create-new-div-dynamically-change-it-move-it-modify-it-in --> <html lang="en" class="no-js">
 	<head>
 		<meta charset="UTF-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -17,7 +15,7 @@
 <body>
 	<ul class="menu">
 		<li class="menuli"><a class="link" href="../Logger_Setup.html">Setup</a></li>
-		<li class="menuli"><a class="link" href="Logging_Settings.html">Logger-Settings</a></li>
+		<li class="menuli"><a class="link" href="../Logging_Settings.html">Logger-Settings</a></li>
 		<li class="menuli"><a class="link" href="../liveView.html">Live/Download</a></li>
 		<div class="menuri">
 			<img src="../Picture/LogoBosch.png" style="width:200px;"/>
@@ -35,7 +33,15 @@
 		  <div id="Disp_table_div" style="visibility:hidden;">
 		  <p>Signal Display</p>
 		  </div>
+		  <div>
+		    <div class="download_sel">
+		    <select id="down_sel">
+		    </select>
+  		    </div>
+		    <button class="Upload" id="downloadbtn">Download</button>
+		  </div>
 		</div>
+		
 	</div>
 <script>
 //<!-- Breackpoint-->

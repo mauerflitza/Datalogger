@@ -17,8 +17,7 @@
 	</head>
 <body>
 	<ul class="menu">
-		<li class="menuli"><a class="link" href="Logger_Setup.html">Setup</a></li>
-		<li class="menuli"><a class="link" href="Logging_Settings.html">Logger-Settings</a></li>
+		<li class="menuli"><a class="link" href="../Logger_Setup.html">Setup</a></li>
 		<li class="menuli"><a class="link" href="../liveView.html">LiveView</a></li>
 		<div class="menuri">
 			<img src="../Picture/LogoBosch.png" style="width:200px;"/>
@@ -46,7 +45,7 @@
 			  <input type="text" name="StartVal" id="StartVal" style="visibility:hidden;"/>
 			  <input type="text" name="webpage" id="webpage" style="visibility:hidden;"/>
 			  <input type="text" name="selected" id="selected" style="visibility:hidden;"/>
-			  <input name="submit_bttn" type="submit" value="Submit">
+			  <input class="Upload" name="submit_bttn" type="submit" value="Saving">
 			</form>
 		</div>
 	</div>
