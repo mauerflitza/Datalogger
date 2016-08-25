@@ -187,7 +187,8 @@ class csvPrinter(threading.Thread):
 		threading.Thread.__init__(self)
 		self.ende=end_flag
 		#Hier noch Logfile-Name mit Datum hin
-		self.logfile=open("test.csv","w")
+		filename=os.path.join("/home/pi/datalogger/logfiles",time.strftime("%Y%m%d-%H%M%S")+".csv")
+		self.logfile=open(filename, "w")
 		self.new_log_Flag=new_log_Flag
 		self.names=[]
 		self.row=[]
@@ -209,7 +210,8 @@ class csvPrinter(threading.Thread):
 			#new Setup deteced--> new Logfile
 			if not q_name.empty():
 				self.logfile.close()
-				self.logfile=open("test.csv", "w")
+				filename=os.path.join("/home/pi/datalogger/logfiles",time.strftime("%Y%m%d-%H%M%S")+".csv")
+				self.logfile=open(filename, "w")
 #				self.logfile=open(os.path.join("/home/pi/datalogger/logfiles","HIER-NOCH-NAMEN-MIT-DATUM.csv"), "w")
 				self.names, titles=q_name.get()
 				#Unit hinzufuegen noch wenn eine vorhanden ist
