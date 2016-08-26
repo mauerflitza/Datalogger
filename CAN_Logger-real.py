@@ -158,7 +158,7 @@ class Listener(threading.Thread):
 	def __init__(self, end_flag):
 		threading.Thread.__init__(self)
 		self.ende=end_flag
-		self.bus = can.interface.Bus("vcan0", bustype="socketcan_native")
+		self.bus = can.interface.Bus("can0", bustype="socketcan_native")
 	def run(self): 
 		while not self.ende.isSet():
 			mesg=self.bus.recv(0)
@@ -310,7 +310,6 @@ class DataManager(threading.Thread):
 #******************************************************	
 def ctrl_c_handler(signal, frame):
 	end_Flag.set()
-	stop_tornado()
 	#LRM30_request(vcPort,'measure','Idle')
 	time.sleep(1)
 	print('Goodbye, cruel world!!!')
@@ -355,8 +354,7 @@ if __name__ == '__main__':
 	sig_select_Handler.start()
 	
 	#30 seconds runtime and after that the end procedure
-	while not end_Flag.isSet():
-		pass
+	time.sleep(30)
 	end_Flag.set()	
 	notifier.stop()
 	Print_Thread.join()
