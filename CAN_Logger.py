@@ -15,6 +15,7 @@ import tornado.websocket
 import tornado.ioloop
 from tornado.ioloop import PeriodicCallback
 import tornado.web
+import json
 
 #Queue for transporting the new signal setup to the Logfile-Writer
 q_select = queue.Queue()
@@ -61,7 +62,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 		print ('Connection open')	
 	def send_werte(self):
 		if not q_live.empty():
-			self.write_message(str(q_live.get()))
+			signals, values = q_live.get()
+			senden = dict(zip(signals,values))
+			json_send = json.dumps(senden)
+			self.write_message(str())
 			print(q_live.qsize())
 			if q_live.qsize() >15:
 				with q_live.mutex:
