@@ -1,29 +1,4 @@
-//*************************************************
-//Add one row to the Live-View-List
-//*************************************************
-var myFuncCalls=0;
-//BISHER NUR TEST-WERT
-websocketwert=3333333;
-function selector(caller){
-	var table = document.getElementById('Disp_table');
-	var box=document.getElementById('Disp_table_div');
-	var div=document.createElement('div');
-	var vorhanden=document.getElementById(caller.innerHTML);
-	if (!vorhanden){
-		div.style.visibility="visible";
-		div.innerHTML = '<p>'+caller.innerHTML+': '+websocketwert+'</p>';
-		div.setAttribute('class',"Anzeige");
-		div.setAttribute('id',caller.innerHTML);
-		box.appendChild(div);
-	myFuncCalls++;
-}}
-//*************************************************
-//Delete a signal from the LiveView
-//*************************************************
-function deleteRow(r) {
-var i = r.parentNode.parentNode.rowIndex;
-document.getElementById("Sign_table").deleteRow(i);		
-}
+
 
 //function loader(){
 //	$(".sig_namen").each(function(){
