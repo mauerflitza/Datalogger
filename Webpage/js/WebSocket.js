@@ -2,7 +2,12 @@ ws = new WebSocket("ws:127.0.0.1:8888");
 ws.onmessage = function(entry) {
 	end = new Date().getTime();
 	//console.log('RUNTIME: ', end-start);
-	message = entry.data;
+	message = JSON.parse(entry.data);
+	$('.Auswahl').each(function(){
+		if key=$(this).attr('id') in message {
+			$(this).children(span).text(message.key);
+		}
+	});
 	console.log('Message: ',message);
 
 };
