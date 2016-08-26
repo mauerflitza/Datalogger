@@ -11,7 +11,7 @@ function selector(caller){
 	var vorhanden=document.getElementById(caller.innerHTML);
 	if (!vorhanden){
 		div.style.visibility="visible";
-		div.innerHTML = '<p>'+caller.innerHTML+': '+websocketwert+'</p>';
+		div.innerHTML = '<p>'+caller.innerHTML+': </p><span>'+websocketwert+'</span>';
 		div.setAttribute('class',"Anzeige");
 		div.setAttribute('id',caller.innerHTML);
 		box.appendChild(div);

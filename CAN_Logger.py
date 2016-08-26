@@ -64,8 +64,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 		if not q_live.empty():
 			signals, values = q_live.get()
 			senden = dict(zip(signals,values))
+			print(senden)
 			json_send = json.dumps(senden)
-			self.write_message(str())
+			self.write_message(json_send)
 			print(q_live.qsize())
 			if q_live.qsize() >15:
 				with q_live.mutex:
