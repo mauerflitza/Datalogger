@@ -229,7 +229,11 @@ class csvPrinter(threading.Thread):
 #				with q_logs.mutex:
 #					q_logs.queue.clear()
 		self.logfile.close()
-		
+
+#******************************************************
+#Processes the data received from Listener. Signal gets compared with the selected signals and if its selected 
+#the value gets calculated and passed to the csv-writer and websocket-Handler
+#******************************************************		
 class DataManager(threading.Thread):
 	def __init__(self, end_flag, new_log_Flag):
 		threading.Thread.__init__(self)
