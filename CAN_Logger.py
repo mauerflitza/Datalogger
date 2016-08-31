@@ -40,11 +40,16 @@ class shutdown(threading.Thread):
 		self.process = subprocess.Popen(command.split(),stdout=subprocess.PIPE)
 	def run(self): 
 		while not self.ende.isSet(): 
-			if False: #(hier noch die Bedingung mit Wert des Analogeinganges für Shutdown)
-				self.ende.set()
-				#Hier noch Unmount der Logfile-Partition
-				output = self.process.communicate()[0]
-				print(output)
+			if False: #(missing the condition for shutdown (voltage from GPIO-PIN) )
+				self.count+=1
+				if self.count > 4:
+					self.ende.set()
+					#Possibly unmount the log-partition
+					time.sleep(100)
+					output = self.process.communicate()[0]
+					print(output)
+			else:
+				self.count=0
 
 #******************************************************
 # Klasse des Websockets
