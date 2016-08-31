@@ -57,10 +57,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 	def open(self):
 		with q_live.mutex:
 			q_live.queue.clear()
-		self.callback = PeriodicCallback(self.send_werte, 1)
+		self.callback = PeriodicCallback(self.send_values, 1)
 		self.callback.start()
 		print ('Connection open')	
-	def send_werte(self):
+	def send_values(self):
 		if not q_live.empty():
 			signals, values = q_live.get()
 			senden = dict(zip(signals,values))
