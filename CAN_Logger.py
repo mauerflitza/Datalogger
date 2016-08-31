@@ -52,8 +52,8 @@ class shutdown(threading.Thread):
 				self.count=0
 
 #******************************************************
-# Klasse des Websockets
-# Periodischer Callback wird erstellt, der die Werte aus der Queue zurueck gibt	
+#class for Websockets
+#Periodicall Callback is created, which forwards the logged data to the web-interface
 #******************************************************
 class WSHandler(tornado.websocket.WebSocketHandler):
 	def check_origin(self, origin):
@@ -82,14 +82,14 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 		print('Connection closed!')
 		self.callback.stop()
 		
-		
+# Websocket gets started on port 8888		
 def start_Tornado():
   application = tornado.web.Application([(r'/', WSHandler),])
   http_server = tornado.httpserver.HTTPServer(application)
   http_server.listen(8888)
   tornado.ioloop.IOLoop.instance().start()
 
-# Websocket wird wieder geschlossen
+# Websocket gets closed again
 def stop_tornado():
     ioloop = tornado.ioloop.IOLoop.instance()
     ioloop.add_callback(ioloop.stop)
@@ -172,6 +172,7 @@ class Listener(threading.Thread):
 			
 #******************************************************
 #Thread for writing in basic text-file
+#not working, doesnt get the data from DataManager
 #******************************************************
 class Printer(threading.Thread):
 	def __init__(self,logfile, end_flag):
@@ -195,7 +196,6 @@ class csvPrinter(threading.Thread):
 	def __init__(self,end_flag, new_log_Flag):	
 		threading.Thread.__init__(self)
 		self.ende=end_flag
-		#Hier noch Logfile-Name mit Datum hin
 		filename=os.path.join("/home/pi/datalogger/logfiles",time.strftime("%Y%m%d-%H%M%S")+".csv")
 		self.logfile=open(filename, "w")
 		self.new_log_Flag=new_log_Flag
@@ -203,7 +203,6 @@ class csvPrinter(threading.Thread):
 		self.row=[]
 		if not q_name.empty():
 			self.names, titles=q_name.get()
-			#Unit hinzufuegen noch wenn eine vorhanden ist
 			self.logfile.write(','.join(titles) + "\n")
 			for i in range(len(self.names)):
 				self.row.append(' ')
@@ -223,7 +222,6 @@ class csvPrinter(threading.Thread):
 				self.logfile=open(filename, "w")
 #				self.logfile=open(os.path.join("/home/pi/datalogger/logfiles","HIER-NOCH-NAMEN-MIT-DATUM.csv"), "w")
 				self.names, titles=q_name.get()
-				#Unit hinzufuegen noch wenn eine vorhanden ist
 				self.logfile.write(','.join(titles) + "\n")
 				for i in range(len(self.names)):
 					self.row.append(' ')
@@ -233,7 +231,12 @@ class csvPrinter(threading.Thread):
 #				with q_logs.mutex:
 #					q_logs.queue.clear()
 		self.logfile.close()
-		
+
+#******************************************************
+#Transforms the necessary data for the selected values and sends the transformed (factor, offset)
+#values to the WSHandler and csv-Writer
+#Also changes the selected signals and alerts the csv-thread
+#******************************************************				
 class DataManager(threading.Thread):
 	def __init__(self, end_flag, new_log_Flag):
 		threading.Thread.__init__(self)
