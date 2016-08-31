@@ -328,11 +328,15 @@ def ctrl_c_handler(signal, frame):
 #******************************************************
 if __name__ == '__main__':
 	#Initialising all Setups and Flags
+	#End-event for all threads
 	end_Flag = threading.Event()
+	#change in the selected signals file detected
 	change_Flag = threading.Event()
+	#new setup has be stored --> new logfile
 	new_log_Flag = threading.Event()
-	logs = open('test.csv', 'w')
+	#Upon start needs to load the old setup
 	q_select.put(msg_transformer())
+	#Manual abort handler
 	signal.signal(signal.SIGINT, ctrl_c_handler)
 		
 	#File-Watcher on the Setting-Files
@@ -353,9 +357,10 @@ if __name__ == '__main__':
 	t_websocket = threading.Thread(target=start_Tornado)
 	print("finished initialized")
 	print("starting Threads ...")
-	t_websocket.start()
+	
 
 	#Starting Threads
+	t_websocket.start()
 	Listen_Thread.start()
 	Manager_Thread.start()
 	Print_Thread.start()
@@ -368,6 +373,4 @@ if __name__ == '__main__':
 	notifier.stop()
 	Print_Thread.join()
 	stop_tornado()
-	print("LOGS:")
-	print(q_logs.qsize())
 	t_websocket.join()
